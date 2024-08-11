@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">PC Shutdown</string>
+    <string name="actions">Actions</string>
+    <string name="turn_on">Turn On</string>
+    <string name="turn_off">Turn Off</string>
+    <string name="reboot">Reboot</string>
+    <string name="sleep">Sleep</string>
+    <string name="mac">MAC Address</string>
+    <string name="ip">Broadcast IP</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="save_profile">Save Profile</string>
+    <string name="delete_profile">Delete Profile</string>
+</resources>
