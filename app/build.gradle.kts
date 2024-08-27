@@ -10,8 +10,8 @@ android {
         applicationId = "com.example.pcshutdown"
         minSdk = 31
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -34,11 +34,11 @@ android {
 
 dependencies {
 
-    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("com.google.android.material:material:1.12.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation("com.jcraft:jsch:0.1.55")
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("androidx.security:security-crypto:1.1.0-beta01")
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.arch.core:core-runtime:2.2.0")
     implementation("com.pranavpandey.android:dynamic-toasts:4.3.0")

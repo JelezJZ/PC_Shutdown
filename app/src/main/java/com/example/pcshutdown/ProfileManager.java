@@ -67,12 +67,6 @@ public class ProfileManager {
             return;
         }
 
-        // Проверка SSH соединения
-        if (!ConnectionTester.testSSHConnection(broadcastIP, Constants.DEFAULT_SSH_PORT, username, password)) {
-            activity.runOnUiThread(() -> DynamicToast.make(activity, "SSH connection failed", Toast.LENGTH_SHORT).show());
-            return;
-        }
-
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(Constants.MAC_ADDRESS_KEY, macAddress);
         editor.putString(Constants.BROADCAST_IP_KEY, broadcastIP);

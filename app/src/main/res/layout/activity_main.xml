@@ -87,11 +87,36 @@
             app:layout_constraintTop_toBottomOf="@+id/btnSaveProfile" />
 
         <Button
+            android:id="@+id/btnTestSSHConnection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:backgroundTint="@android:color/holo_purple"
+            android:fontFamily="@font/silkscreen"
+            android:text="@string/test_SSH"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnDeleteProfile" />
+
+        <TextView
+            android:id="@+id/textViewActions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="80dp"
+            android:fontFamily="@font/silkscreen"
+            android:text="@string/actions"
+            android:textSize="24sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnDeleteProfile" />
+
+        <Button
             android:id="@+id/btnTurnOn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             android:backgroundTint="@android:color/holo_green_light"
             android:fontFamily="@font/silkscreen"
             android:text="@string/turn_on"
@@ -105,7 +130,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="4dp"
             android:backgroundTint="@android:color/holo_red_dark"
             android:fontFamily="@font/silkscreen"
             android:text="@string/turn_off"
@@ -117,24 +142,11 @@
             app:layout_constraintTop_toBottomOf="@+id/btnTurnOn" />
 
         <Button
-            android:id="@+id/btnReboot"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:backgroundTint="@android:color/holo_orange_light"
-            android:fontFamily="@font/silkscreen"
-            android:text="@string/reboot"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnSleep" />
-
-        <Button
             android:id="@+id/btnSleep"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="1dp"
+            android:layout_marginTop="8dp"
             android:backgroundTint="@android:color/holo_blue_bright"
             android:fontFamily="@font/silkscreen"
             android:text="@string/sleep"
@@ -143,17 +155,19 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btnTurnOff" />
 
-        <TextView
-            android:id="@+id/textViewActions"
-            android:layout_width="wrap_content"
+        <Button
+            android:id="@+id/btnReboot"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@android:color/holo_orange_light"
             android:fontFamily="@font/silkscreen"
-            android:text="@string/actions"
-            android:textSize="24sp"
+            android:text="@string/reboot"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnDeleteProfile" />
+            app:layout_constraintTop_toBottomOf="@+id/btnSleep" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

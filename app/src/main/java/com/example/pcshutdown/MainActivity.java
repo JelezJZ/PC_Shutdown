@@ -37,12 +37,44 @@ public class MainActivity extends AppCompatActivity {
 
         profileManager.loadProfile();
 
-        Button btnTurnOn = findViewById(R.id.btnTurnOn);
-        Button btnTurnOff = findViewById(R.id.btnTurnOff);
         Button btnSaveProfile = findViewById(R.id.btnSaveProfile);
         Button btnDeleteProfile = findViewById(R.id.btnDeleteProfile);
+        Button btnTestSSHConnection = findViewById(R.id.btnTestSSHConnection);
+        Button btnTurnOn = findViewById(R.id.btnTurnOn);
+        Button btnTurnOff = findViewById(R.id.btnTurnOff);
         Button btnSleep = findViewById(R.id.btnSleep);
         Button btnReboot = findViewById(R.id.btnReboot);
+
+        btnSaveProfile.setOnClickListener(v -> new Thread(() -> {
+            try {
+                profileManager.saveProfile();
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "An error occurred: ", e);
+                runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start());
+
+        btnDeleteProfile.setOnClickListener(v -> new Thread(() -> {
+            try {
+                profileManager.deleteProfile();
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "An error occurred: ", e);
+                runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start());
+
+        btnTestSSHConnection.setOnClickListener(v -> new Thread(() -> {
+            final String broadcastIP = broadcastIPEditText.getText().toString();
+            final String username = usernameEditText.getText().toString();
+            final String password = passwordEditText.getText().toString();
+
+            // Проверка SSH соединения
+            if (!ConnectionTester.testSSHConnection(broadcastIP, Constants.DEFAULT_SSH_PORT, username, password)) {
+                runOnUiThread(() -> DynamicToast.make(MainActivity.this, "SSH connection failed", Toast.LENGTH_SHORT).show());
+            } else {
+                runOnUiThread(() -> DynamicToast.make(MainActivity.this, "SSH connection success", Toast.LENGTH_SHORT).show());
+            }
+        }).start());
 
         btnTurnOn.setOnClickListener(v -> {
             if(!ConnectionTester.isWifiConnected(MainActivity.this)) {
@@ -160,24 +192,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }).start();
         });
-
-        btnSaveProfile.setOnClickListener(v -> new Thread(() -> {
-            try {
-                profileManager.saveProfile();
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "An error occurred: ", e);
-                runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-            }
-        }).start());
-
-        btnDeleteProfile.setOnClickListener(v -> new Thread(() -> {
-            try {
-                profileManager.deleteProfile();
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "An error occurred: ", e);
-                runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-            }
-        }).start());
     }
 
     private void initializeUIElements() {
