@@ -66,7 +66,7 @@ public class ActionManager {
     }
 
     // Метод выключения пк
-    public void shutdownRemotePC(String hostname, String username, String password) {
+    public void shutdownRemotePC(String hostname, String username, String password, String osType) {
         try {
             Activity activity = activityReference.get();
 
@@ -80,7 +80,15 @@ public class ActionManager {
             session.connect();
 
             ChannelExec channel = (ChannelExec) session.openChannel("exec");
-            channel.setCommand("shutdown /s /f /t 0");
+
+            String command;
+            if ("LINUX".equals(osType)) {
+                command = "systemctl poweroff";
+            } else {
+                command = "shutdown /s /f /t 0";
+            }
+
+            channel.setCommand(command);
             channel.connect();
 
             channel.disconnect();
@@ -93,7 +101,7 @@ public class ActionManager {
     }
 
     // Метод перевода пк в спящий режим
-    public void sleepRemotePC(String hostname, String username, String password) {
+    public void sleepRemotePC(String hostname, String username, String password, String osType) {
         try {
             Activity activity = activityReference.get();
 
@@ -107,7 +115,15 @@ public class ActionManager {
             session.connect();
 
             ChannelExec channel = (ChannelExec) session.openChannel("exec");
-            channel.setCommand("rundll32.exe powrprof.dll, SetSuspendState Sleep");
+
+            String command;
+            if ("LINUX".equals(osType)) {
+                command = "systemctl suspend";
+            } else {
+                command = "rundll32.exe powrprof.dll, SetSuspendState Sleep";
+            }
+
+            channel.setCommand(command);
             channel.connect();
 
             channel.disconnect();
@@ -120,7 +136,7 @@ public class ActionManager {
     }
 
     // Метод перезагрузки пк
-    public void rebootRemotePC(String hostname, String username, String password) {
+    public void rebootRemotePC(String hostname, String username, String password, String osType) {
         try {
             Activity activity = activityReference.get();
 
@@ -134,7 +150,15 @@ public class ActionManager {
             session.connect();
 
             ChannelExec channel = (ChannelExec) session.openChannel("exec");
-            channel.setCommand("shutdown /r /f /t 0");
+
+            String command;
+            if ("LINUX".equals(osType)) {
+                command = "systemctl reboot";
+            } else {
+                command = "shutdown /r /f /t 0";
+            }
+
+            channel.setCommand(command);
             channel.connect();
 
             channel.disconnect();

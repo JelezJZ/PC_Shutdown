@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private ProfileManager profileManager;
     private ActionManager actionManager;
+    private String currentRemoteOS;
     public static final Logger logger = Logger.getLogger(MainActivity.class.getName());
 
     @Override
@@ -63,18 +64,29 @@ public class MainActivity extends AppCompatActivity {
             }
         }).start());
 
-        btnTestSSHConnection.setOnClickListener(v -> new Thread(() -> {
+        btnTestSSHConnection.setOnClickListener(v -> {
             final String broadcastIP = broadcastIPEditText.getText().toString();
             final String username = usernameEditText.getText().toString();
             final String password = passwordEditText.getText().toString();
 
-            // Проверка SSH соединения
-            if (!ConnectionTester.testSSHConnection(broadcastIP, Constants.DEFAULT_SSH_PORT, username, password)) {
-                runOnUiThread(() -> DynamicToast.make(MainActivity.this, "SSH connection failed", Toast.LENGTH_SHORT).show());
-            } else {
-                runOnUiThread(() -> DynamicToast.make(MainActivity.this, "SSH connection success", Toast.LENGTH_SHORT).show());
-            }
-        }).start());
+            new Thread(() -> {
+                String remoteOS = ConnectionTester.testSSHConnection(
+                    broadcastIP, 
+                    Constants.DEFAULT_SSH_PORT, 
+                    username, 
+                    password
+                );
+
+                runOnUiThread(() -> {
+                    if ("UNKNOWN".equals(remoteOS)) {
+                        DynamicToast.make(MainActivity.this, "SSH connection failed", Toast.LENGTH_SHORT).show();
+                    } else {
+                        DynamicToast.make(MainActivity.this, "SSH connection success", Toast.LENGTH_SHORT).show();
+                        MainActivity.this.currentRemoteOS = remoteOS;
+                    }
+                });
+            }).start();
+        });
 
         btnTurnOn.setOnClickListener(v -> {
             if(!ConnectionTester.isWifiConnected(MainActivity.this)) {
@@ -123,8 +135,8 @@ public class MainActivity extends AppCompatActivity {
 
             new Thread(() -> {
                 try {
-                    if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT) && ConnectionTester.testSSHConnection(broadcastIP, Constants.DEFAULT_SSH_PORT, username, password)) {
-                        actionManager.shutdownRemotePC(broadcastIP, username, password);
+                    if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT) && !"UNKNOWN".equals(currentRemoteOS)) {
+                        actionManager.shutdownRemotePC(broadcastIP, username, password, currentRemoteOS);
                     } else {
                         runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Failed to connect to the remote PC", Toast.LENGTH_SHORT).show());
                     }
@@ -152,8 +164,8 @@ public class MainActivity extends AppCompatActivity {
 
             new Thread(() -> {
                 try {
-                    if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT) && ConnectionTester.testSSHConnection(broadcastIP, Constants.DEFAULT_SSH_PORT, username, password)) {
-                        actionManager.sleepRemotePC(broadcastIP, username, password);
+                    if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT) && !"UNKNOWN".equals(currentRemoteOS)) {
+                        actionManager.sleepRemotePC(broadcastIP, username, password, currentRemoteOS);
                     } else {
                         runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Failed to connect to the remote PC", Toast.LENGTH_SHORT).show());
                     }
@@ -181,8 +193,8 @@ public class MainActivity extends AppCompatActivity {
 
             new Thread(() -> {
                 try {
-                    if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT) && ConnectionTester.testSSHConnection(broadcastIP, Constants.DEFAULT_SSH_PORT, username, password)) {
-                        actionManager.rebootRemotePC(broadcastIP, username, password);
+                    if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT) && !"UNKNOWN".equals(currentRemoteOS)) {
+                        actionManager.rebootRemotePC(broadcastIP, username, password, currentRemoteOS);
                     } else {
                         runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Failed to connect to the remote PC", Toast.LENGTH_SHORT).show());
                     }

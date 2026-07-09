@@ -9,8 +9,11 @@ import android.net.NetworkCapabilities;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.ChannelExec;
 
 import java.io.IOException;
+import java.io.InputStream;
+
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.logging.Level;
@@ -27,22 +30,60 @@ public class ConnectionTester {
     }
 
     // Проверка SSH соединения
-    public static boolean testSSHConnection(String hostname, int port, String username, String password) {
+    public static String testSSHConnection(String hostname, int port, String username, String password) {
+        Session session = null;
+        ChannelExec channel = null;
         try {
             JSch jsch = new JSch();
-            Session session = jsch.getSession(username, hostname, port);
+            session = jsch.getSession(username, hostname, port);
             session.setPassword(password);
 
             java.util.Properties config = new java.util.Properties();
             config.put("StrictHostKeyChecking", "no"); // Отключаем проверку ключа хоста
             session.setConfig(config);
+
             session.connect(3000); // Timeout в 3 секунды
 
-            session.disconnect();
-            return true;
+            // --- Начало блока определения ОС ---
+            channel = (ChannelExec) session.openChannel("exec");
+            channel.setCommand("uname -s");
+
+            java.io.InputStream in = channel.getInputStream();
+            channel.connect();
+
+            byte[] tmp = new byte[1024];
+            StringBuilder response = new StringBuilder();
+            while (true) {
+                while (in.available() > 0) {
+                    int i = in.read(tmp, 0, 1024);
+                    if (i < 0) break;
+                    response.append(new String(tmp, 0, i));
+                }
+                if (channel.isClosed()) {
+                    if (in.available() > 0) continue;
+                    break;
+                }
+                Thread.sleep(50);
+            }
+
+            String osName = response.toString().trim().toLowerCase();
+            if (osName.contains("linux")) {
+                return "LINUX";
+            } else {
+                return "WINDOWS";
+            }
+            // --- Конец блока определения ОС ---
+
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to establish SSH connection to " + hostname + " on port " + port, e);
-            return false;
+            logger.log(Level.SEVERE, "Failed to connect or detect OS for " + hostname, e);
+            return "UNKNOWN";
+        } finally {
+            if (channel != null && channel.isConnected()) {
+                channel.disconnect();
+            }
+            if (session != null && session.isConnected()) {
+                session.disconnect();
+            }
         }
     }
 
