@@ -24,8 +24,69 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private ProfileManager profileManager;
     private ActionManager actionManager;
-    private String currentRemoteOS;
+    private String currentRemoteOS = "UNKNOWN";
     public static final Logger logger = Logger.getLogger(MainActivity.class.getName());
+
+    private void executeRemoteAction(RemoteActionRunnable actionRunnable) {
+        if (!ConnectionTester.isWifiConnected(MainActivity.this)) {
+            DynamicToast.make(MainActivity.this, "Connect to Wifi to continue", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (profileManager.isProfileNotAvailable()) {
+            DynamicToast.make(MainActivity.this, "Profile not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final String broadcastIP = broadcastIPEditText.getText().toString().trim();
+        final String username = usernameEditText.getText().toString().trim();
+        final String password = passwordEditText.getText().toString();
+
+        new Thread(() -> {
+            try {
+                if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT) && !"UNKNOWN".equals(currentRemoteOS)) {
+                    actionRunnable.run(broadcastIP, username, password, currentRemoteOS);
+                } else {
+                    runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Failed to connect to the remote PC", Toast.LENGTH_SHORT).show());
+                }
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "An error occurred: ", e);
+                runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+
+    private void executeWolAction(WolActionRunnable actionRunnable) {
+        if (!ConnectionTester.isWifiConnected(MainActivity.this)) {
+            DynamicToast.make(MainActivity.this, "Connect to Wifi to continue", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (profileManager.isProfileNotAvailable()) {
+            DynamicToast.make(MainActivity.this, "Profile not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final String broadcastIP = broadcastIPEditText.getText().toString().trim();
+        final String macAddress = macAddressEditText.getText().toString().trim();
+
+        new Thread(() -> {
+            try {
+                actionRunnable.run(macAddress, broadcastIP);       
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "WoL Error occurred: ", e);
+                runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+
+    interface RemoteActionRunnable {
+        void run(String ip, String user, String pass, String os);
+    }
+
+    interface WolActionRunnable {
+        void run(String mac, String ip);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,123 +148,18 @@ public class MainActivity extends AppCompatActivity {
                 });
             }).start();
         });
+        
+        btnTurnOn.setOnClickListener(v -> executeWolAction((mac, ip) -> 
+            actionManager.wakeOnLan(mac, ip)));
 
-        btnTurnOn.setOnClickListener(v -> {
-            if(!ConnectionTester.isWifiConnected(MainActivity.this)) {
-                DynamicToast.make(MainActivity.this, "Connect to Wifi to continue", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        btnTurnOff.setOnClickListener(v -> executeRemoteAction((ip, user, pass, os) -> 
+            actionManager.shutdownRemotePC(ip, user, pass, os)));
 
-            if (profileManager.isProfileNotAvailable()) {
-                DynamicToast.make(MainActivity.this, "Profile not available", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        btnSleep.setOnClickListener(v -> executeRemoteAction((ip, user, pass, os) -> 
+            actionManager.sleepRemotePC(ip, user, pass, os)));
 
-            // Считываем значения в UI-потоке
-            final String broadcastIP = broadcastIPEditText.getText().toString();
-            final String macAddress = macAddressEditText.getText().toString();
-
-            // Запускаем выполнение фоновой задачи
-            new Thread(() -> {
-                try {
-                    if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT)) {
-                        runOnUiThread(() -> DynamicToast.make(MainActivity.this, "PC is already online", Toast.LENGTH_SHORT).show());
-                    } else {
-                        actionManager.wakeOnLan(macAddress, broadcastIP);
-                    }
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "An error occurred: ", e);
-                    runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                }
-            }).start();
-        });
-
-        btnTurnOff.setOnClickListener(v -> {
-            if(!ConnectionTester.isWifiConnected(MainActivity.this)) {
-                DynamicToast.make(MainActivity.this, "Connect to Wifi to continue", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (profileManager.isProfileNotAvailable()) {
-                DynamicToast.make(MainActivity.this, "Profile not available", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            final String broadcastIP = broadcastIPEditText.getText().toString();
-            final String username = usernameEditText.getText().toString();
-            final String password = passwordEditText.getText().toString();
-
-            new Thread(() -> {
-                try {
-                    if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT) && !"UNKNOWN".equals(currentRemoteOS)) {
-                        actionManager.shutdownRemotePC(broadcastIP, username, password, currentRemoteOS);
-                    } else {
-                        runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Failed to connect to the remote PC", Toast.LENGTH_SHORT).show());
-                    }
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "An error occurred: ", e);
-                    runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                }
-            }).start();
-        });
-
-        btnSleep.setOnClickListener(v -> {
-            if(!ConnectionTester.isWifiConnected(MainActivity.this)) {
-                DynamicToast.make(MainActivity.this, "Connect to Wifi to continue", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (profileManager.isProfileNotAvailable()) {
-                DynamicToast.make(MainActivity.this, "Profile not available", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            final String broadcastIP = broadcastIPEditText.getText().toString();
-            final String username = usernameEditText.getText().toString();
-            final String password = passwordEditText.getText().toString();
-
-            new Thread(() -> {
-                try {
-                    if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT) && !"UNKNOWN".equals(currentRemoteOS)) {
-                        actionManager.sleepRemotePC(broadcastIP, username, password, currentRemoteOS);
-                    } else {
-                        runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Failed to connect to the remote PC", Toast.LENGTH_SHORT).show());
-                    }
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "An error occurred: ", e);
-                    runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                }
-            }).start();
-        });
-
-        btnReboot.setOnClickListener(v -> {
-            if(!ConnectionTester.isWifiConnected(MainActivity.this)) {
-                DynamicToast.make(MainActivity.this, "Connect to Wifi to continue", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (profileManager.isProfileNotAvailable()) {
-                DynamicToast.make(MainActivity.this, "Profile not available", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            final String broadcastIP = broadcastIPEditText.getText().toString();
-            final String username = usernameEditText.getText().toString();
-            final String password = passwordEditText.getText().toString();
-
-            new Thread(() -> {
-                try {
-                    if (ConnectionTester.isPortOpen(broadcastIP, Constants.DEFAULT_SSH_PORT) && !"UNKNOWN".equals(currentRemoteOS)) {
-                        actionManager.rebootRemotePC(broadcastIP, username, password, currentRemoteOS);
-                    } else {
-                        runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Failed to connect to the remote PC", Toast.LENGTH_SHORT).show());
-                    }
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "An error occurred: ", e);
-                    runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                }
-            }).start();
-        });
+        btnReboot.setOnClickListener(v -> executeRemoteAction((ip, user, pass, os) -> 
+            actionManager.rebootRemotePC(ip, user, pass, os)));
     }
 
     private void initializeUIElements() {

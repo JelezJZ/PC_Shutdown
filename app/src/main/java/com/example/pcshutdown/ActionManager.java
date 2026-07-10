@@ -23,6 +23,33 @@ public class ActionManager {
         this.activityReference = new WeakReference<>(activity);
     }
 
+    private void sendSshCommand(String hostname, String username, String password, String command, String successMessage) {
+        try {
+            Activity activity = activityReference.get();
+            if (activity == null) return;
+
+            JSch jsch = new JSch();
+            Session session = jsch.getSession(username, hostname, Constants.DEFAULT_SSH_PORT);
+            session.setPassword(password);
+
+            java.util.Properties config = new java.util.Properties();
+            config.put("StrictHostKeyChecking", "no");
+            session.setConfig(config);
+            session.connect(3000);
+
+            ChannelExec channel = (ChannelExec) session.openChannel("exec");
+            channel.setCommand(command);
+            channel.connect();
+
+            channel.disconnect();
+            session.disconnect();
+
+            activity.runOnUiThread(() -> DynamicToast.make(activity, successMessage, Toast.LENGTH_SHORT).show());
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "SSH Execution failed: ", e);
+        }
+    }
+
     // Метод включения пк
     public void wakeOnLan(String macAddress, String broadcastIP) {
         try {
@@ -67,106 +94,19 @@ public class ActionManager {
 
     // Метод выключения пк
     public void shutdownRemotePC(String hostname, String username, String password, String osType) {
-        try {
-            Activity activity = activityReference.get();
-
-            JSch jsch = new JSch();
-            Session session = jsch.getSession(username, hostname, Constants.DEFAULT_SSH_PORT);
-            session.setPassword(password);
-
-            java.util.Properties config = new java.util.Properties();
-            config.put("StrictHostKeyChecking", "no");
-            session.setConfig(config);
-            session.connect();
-
-            ChannelExec channel = (ChannelExec) session.openChannel("exec");
-
-            String command;
-            if ("LINUX".equals(osType)) {
-                command = "systemctl poweroff";
-            } else {
-                command = "shutdown /s /f /t 0";
-            }
-
-            channel.setCommand(command);
-            channel.connect();
-
-            channel.disconnect();
-            session.disconnect();
-
-            activity.runOnUiThread(() -> DynamicToast.make(activity, "Shutdown Command Sent", Toast.LENGTH_SHORT).show());
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "An error occurred: ", e);
-        }
+        String command = "LINUX".equals(osType) ? "systemctl poweroff" : "shutdown /s /f /t 0";
+        sendSshCommand(hostname, username, password, command, "Shutdown Command Sent");
     }
 
     // Метод перевода пк в спящий режим
     public void sleepRemotePC(String hostname, String username, String password, String osType) {
-        try {
-            Activity activity = activityReference.get();
-
-            JSch jsch = new JSch();
-            Session session = jsch.getSession(username, hostname, Constants.DEFAULT_SSH_PORT);
-            session.setPassword(password);
-
-            java.util.Properties config = new java.util.Properties();
-            config.put("StrictHostKeyChecking", "no");
-            session.setConfig(config);
-            session.connect();
-
-            ChannelExec channel = (ChannelExec) session.openChannel("exec");
-
-            String command;
-            if ("LINUX".equals(osType)) {
-                command = "systemctl suspend";
-            } else {
-                command = "rundll32.exe powrprof.dll, SetSuspendState Sleep";
-            }
-
-            channel.setCommand(command);
-            channel.connect();
-
-            channel.disconnect();
-            session.disconnect();
-
-            activity.runOnUiThread(() -> DynamicToast.make(activity, "Sleep Command Sent", Toast.LENGTH_SHORT).show());
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "An error occurred: ", e);
-        }
+        String command = "LINUX".equals(osType) ? "systemctl suspend" : "rundll32.exe powrprof.dll,SetSuspendState Sleep";
+        sendSshCommand(hostname, username, password, command, "Sleep Command Sent");
     }
 
     // Метод перезагрузки пк
     public void rebootRemotePC(String hostname, String username, String password, String osType) {
-        try {
-            Activity activity = activityReference.get();
-
-            JSch jsch = new JSch();
-            Session session = jsch.getSession(username, hostname, Constants.DEFAULT_SSH_PORT);
-            session.setPassword(password);
-
-            java.util.Properties config = new java.util.Properties();
-            config.put("StrictHostKeyChecking", "no");
-            session.setConfig(config);
-            session.connect();
-
-            ChannelExec channel = (ChannelExec) session.openChannel("exec");
-
-            String command;
-            if ("LINUX".equals(osType)) {
-                command = "systemctl reboot";
-            } else {
-                command = "shutdown /r /f /t 0";
-            }
-
-            channel.setCommand(command);
-            channel.connect();
-
-            channel.disconnect();
-            session.disconnect();
-
-            activity.runOnUiThread(() -> DynamicToast.make(activity, "Reboot Command Sent", Toast.LENGTH_SHORT).show());
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "An error occurred: ", e);
-        }
+        String command = "LINUX".equals(osType) ? "systemctl reboot" : "shutdown /r /f /t 0";
+        sendSshCommand(hostname, username, password, command, "Reboot Command Sent");
     }
 }
