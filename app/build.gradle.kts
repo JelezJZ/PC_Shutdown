@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
 }
@@ -10,10 +12,25 @@ android {
         applicationId = "com.example.pcshutdown"
         minSdk = 31
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.3"
+        versionCode = 1
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            val props = Properties()
+            val localPropertiesFile = rootProject.file("local.properties")
+            if (localPropertiesFile.exists()) {
+                props.load(localPropertiesFile.inputStream())
+            }
+
+            storeFile = file("release.jks")
+            storePassword = props.getProperty("RELEASE_STORE_PASSWORD") ?: ""
+            keyAlias = "release-key"
+            keyPassword = props.getProperty("RELEASE_KEY_PASSWORD") ?: ""        
+        }
     }
 
     buildTypes {
@@ -23,6 +40,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

@@ -107,28 +107,28 @@ public class MainActivity extends AppCompatActivity {
         Button btnSleep = findViewById(R.id.btnSleep);
         Button btnReboot = findViewById(R.id.btnReboot);
 
-        btnSaveProfile.setOnClickListener(v -> new Thread(() -> {
+        btnSaveProfile.setOnClickListener(v -> {
             try {
                 profileManager.saveProfile();
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "An error occurred: ", e);
                 runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
-        }).start());
+        });
 
-        btnDeleteProfile.setOnClickListener(v -> new Thread(() -> {
+        btnDeleteProfile.setOnClickListener(v -> {
             try {
                 profileManager.deleteProfile();
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "An error occurred: ", e);
                 runOnUiThread(() -> DynamicToast.make(MainActivity.this, "Error occurred: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
-        }).start());
+        });
 
         btnTestSSHConnection.setOnClickListener(v -> {
-            final String broadcastIP = broadcastIPEditText.getText().toString();
-            final String username = usernameEditText.getText().toString();
-            final String password = passwordEditText.getText().toString();
+            final String broadcastIP = broadcastIPEditText.getText().toString().trim();
+            final String username = usernameEditText.getText().toString().trim();
+            final String password = passwordEditText.getText().toString().trim();
 
             new Thread(() -> {
                 String remoteOS = ConnectionTester.testSSHConnection(

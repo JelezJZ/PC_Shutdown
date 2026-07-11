@@ -31,10 +31,10 @@ public class ProfileManager {
 
     // Проверка существования профиля
     public boolean isProfileNotAvailable() {
-        String broadcastIP = sharedPreferences.getString("broadcastIP", null);
-        String macAddress = sharedPreferences.getString("macAddress", null);
-        String username = sharedPreferences.getString("username", null);
-        String password = sharedPreferences.getString("password", null);
+        String broadcastIP = sharedPreferences.getString(Constants.BROADCAST_IP_KEY, null);
+        String macAddress = sharedPreferences.getString(Constants.MAC_ADDRESS_KEY, null);
+        String username = sharedPreferences.getString(Constants.USERNAME_KEY, null);
+        String password = sharedPreferences.getString(Constants.PASSWORD_KEY, null);
 
         return broadcastIP == null || macAddress == null || username == null || password == null;
     }
@@ -50,52 +50,55 @@ public class ProfileManager {
     // Сохранение профиля
     public void saveProfile() {
         Activity activity = activityReference.get();
+        if (activity != null) {
+            final String macAddress = macAddressEditText.getText().toString().trim();
+            final String broadcastIP = broadcastIPEditText.getText().toString().trim();
+            final String username = usernameEditText.getText().toString().trim();
+            final String password = passwordEditText.getText().toString().trim();
 
-        final String macAddress = macAddressEditText.getText().toString().trim();
-        final String broadcastIP = broadcastIPEditText.getText().toString().trim();
-        final String username = usernameEditText.getText().toString().trim();
-        final String password = passwordEditText.getText().toString().trim();
+            // Проверка корректности введенных данных
+            if (!isValidMacAddress(macAddress)) {
+                activity.runOnUiThread(() -> DynamicToast.make(activity, "Invalid MAC address", Toast.LENGTH_SHORT).show());
+                return;
+            }
 
-        // Проверка корректности введенных данных
-        if (!isValidMacAddress(macAddress)) {
-            activity.runOnUiThread(() -> DynamicToast.make(activity, "Invalid MAC address", Toast.LENGTH_SHORT).show());
-            return;
+            if (!isValidIPAddress(broadcastIP)) {
+                activity.runOnUiThread(() -> DynamicToast.make(activity, "Invalid IP address", Toast.LENGTH_SHORT).show());
+                return;
+            }
+
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(Constants.MAC_ADDRESS_KEY, macAddress);
+            editor.putString(Constants.BROADCAST_IP_KEY, broadcastIP);
+            editor.putInt(Constants.SSH_PORT_KEY, Constants.DEFAULT_SSH_PORT);
+            editor.putString(Constants.USERNAME_KEY, username);
+            editor.putString(Constants.PASSWORD_KEY, password);
+            editor.apply();
+
+            activity.runOnUiThread(() -> DynamicToast.make(activity, "Profile Saved", Toast.LENGTH_SHORT).show());
         }
-
-        if (!isValidIPAddress(broadcastIP)) {
-            activity.runOnUiThread(() -> DynamicToast.make(activity, "Invalid IP address", Toast.LENGTH_SHORT).show());
-            return;
-        }
-
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(Constants.MAC_ADDRESS_KEY, macAddress);
-        editor.putString(Constants.BROADCAST_IP_KEY, broadcastIP);
-        editor.putInt(Constants.SSH_PORT_KEY, Constants.DEFAULT_SSH_PORT);
-        editor.putString(Constants.USERNAME_KEY, username);
-        editor.putString(Constants.PASSWORD_KEY, password);
-        editor.apply();
-
-        activity.runOnUiThread(() -> DynamicToast.make(activity, "Profile Saved", Toast.LENGTH_SHORT).show());
     }
 
     // Удаление профиля
     public void deleteProfile() {
         Activity activity = activityReference.get();
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove(Constants.MAC_ADDRESS_KEY);
-        editor.remove(Constants.BROADCAST_IP_KEY);
-        editor.remove(Constants.SSH_PORT_KEY);
-        editor.remove(Constants.USERNAME_KEY);
-        editor.remove(Constants.PASSWORD_KEY);
-        editor.apply();
+        if (activity != null) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.remove(Constants.MAC_ADDRESS_KEY);
+            editor.remove(Constants.BROADCAST_IP_KEY);
+            editor.remove(Constants.SSH_PORT_KEY);
+            editor.remove(Constants.USERNAME_KEY);
+            editor.remove(Constants.PASSWORD_KEY);
+            editor.apply();
 
-        activity.runOnUiThread(() -> {
-            DynamicToast.make(activity, "Profile Deleted", Toast.LENGTH_SHORT).show();
-            macAddressEditText.setText("");
-            broadcastIPEditText.setText("");
-            usernameEditText.setText("");
-            passwordEditText.setText("");
-        });
+            activity.runOnUiThread(() -> {
+                DynamicToast.make(activity, "Profile Deleted", Toast.LENGTH_SHORT).show();
+                macAddressEditText.setText("");
+                broadcastIPEditText.setText("");
+                usernameEditText.setText("");
+                passwordEditText.setText("");
+            });
+        }
     }
 
     // Проверка Mac-адреса
